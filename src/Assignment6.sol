@@ -8,9 +8,22 @@ contract Assignment6 {
 
     // 3. Create a public mapping called `balances` to tracker users balances
 
+
+// Variables---------------------------------------------------------------------
+
+mapping(address => uint256) public balances;
+
+
+
+//Events ---------------------------------------------------------------------
+
+event FundsDeposited(address indexed sender, uint256 amount);
+event FundsWithdrawn(address indexed receiver, uint256 amount);
+
     // Modifier to check if sender has enough balance
     modifier hasEnoughBalance(uint amount) {
         // Fill in the logic using require
+        require(balances[msg.sender]>= amount, "Insufficient balance");
         _;
     }
 
@@ -18,8 +31,10 @@ contract Assignment6 {
     // This function should:
     // - Be external and payable
     // - Emit the `FundsDeposited` event
-    function deposit() {
+    function deposit() external payable {
         // increment user balance in balances mapping 
+        balances[msg.sender] += msg.value;
+        emit FundsDeposited(msg.sender, msg.value);
 
         // emit suitable event
     }
@@ -30,12 +45,14 @@ contract Assignment6 {
     // - Take one parameter: `amount`
     // - Use the `hasEnoughBalance` modifier
     // - Emit the `FundsWithdrawn` event
-    function withdraw() {
+    function withdraw(uint256 amount) external hasEnoughBalance(amount) {
         // decrement user balance from balances mapping 
-
+balances[msg.sender] -= amount;
         // send tokens to the caller
-
+(bool success, ) = msg.sender.call{value: amount}("");
+require(success, "Failed to send Ether");
         // emit suitable event
+        emit FundsWithdrawn(msg.sender, amount);
 
     }
 
@@ -43,8 +60,8 @@ contract Assignment6 {
     // This function should:
     // - Be public and view
     // - Return the contract's balance
-    function getContractBalance() {
+    function getContractBalance() public view  returns (uint256) {
         // return the balance of the contract
-
+        return address(this).balance;
     }
 }
